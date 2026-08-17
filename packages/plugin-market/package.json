@@ -1,0 +1,43 @@
+{
+  "name": "@your-scope/dsh-plugin-market",
+  "description": "Recommended-plugin directory (ctx.pluginMarket) for DeepSeek Harness \u2014 curated catalog, live GitHub star metrics, snapshot trends, task-intent ranking, startup prewarm and background refresh",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/types/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/types/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/types/invariant.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-home-paths": "^0.0.1-rc.3",
+    "@deepseek-ai/dsh-invariants": "^0.0.1-rc.1"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-home-paths": "^0.0.1-rc.3",
+    "@deepseek-ai/dsh-invariants": "^0.0.1-rc.1",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

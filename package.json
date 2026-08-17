@@ -1,0 +1,17 @@
+{
+  "name": "@your-scope/dsh-plugin-market-bundle",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness bundle: recommended-plugin directory (ctx.pluginMarket) + the search_plugins tool. One command: `dsh plugin add @your-scope/dsh-plugin-market-bundle`.",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@your-scope/dsh-plugin-market": "workspace:*",
+    "@your-scope/dsh-tool-plugin-search": "workspace:*"
+  }
+}
