@@ -15,6 +15,7 @@ function entry(overrides: Partial<PluginEntry> = {}): PluginEntry {
     description: 'Sample plugin for testing.',
     tags: ['sample', 'test'],
     installCommand: 'dsh plugin add @acme/dsh-sample',
+    installTrust: 'verified',
     ...overrides,
   }
 }
@@ -27,7 +28,6 @@ function githubResponse(stars: number): Response {
 const SEED_IDS = [
   'deepseek-harness',
   'awesome-deepseek-harness',
-  'deepseek-harness-plugins-list',
   'dsh-plugin-hub',
   'dsh-plugin-security-review',
   'dsh-workbench-plugin',

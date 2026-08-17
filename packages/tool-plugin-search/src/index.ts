@@ -37,6 +37,7 @@ interface RecommendationProjection {
   readonly description: string
   readonly tags: string[]
   readonly installCommand: string
+  readonly installTrust: string
   readonly homepage?: string
   readonly stars: number
   readonly starDelta7d?: number
@@ -97,6 +98,7 @@ function projectRecommendation(recommendation: PluginRecommendation): Recommenda
     description: recommendation.description,
     tags: [...recommendation.tags],
     installCommand: recommendation.installCommand,
+    installTrust: recommendation.installTrust,
     ...recommendation.homepage !== undefined ? { homepage: recommendation.homepage } : {},
     stars: recommendation.stars,
     ...recommendation.starDelta7d !== undefined ? { starDelta7d: recommendation.starDelta7d } : {},
@@ -113,7 +115,8 @@ function formatRecommendation(rec: RecommendationProjection): string {
   const trend = deltas.length > 0 ? `, ${deltas.join(', ')}` : ''
   const stale = rec.stale ? ', stale' : ''
   const matched = rec.matchedTags.length > 0 ? ` (matches: ${rec.matchedTags.join(', ')})` : ''
-  return `- **${rec.name}** — \`${rec.repo}\` — ${rec.stars}\u2605${trend}${stale}${matched}\n  ${rec.description}\n  install: \`${rec.installCommand}\``
+  const trust = rec.installTrust === 'unverified' ? ' (install command not verified)' : rec.installTrust === 'reference' ? ' (reference list/docs)' : ''
+  return `- **${rec.name}** — \`${rec.repo}\` — ${rec.stars}\u2605${trend}${stale}${matched}\n  ${rec.description}\n  install: \`${rec.installCommand}\`${trust}`
 }
 
 function signed(value: number): string {
@@ -182,6 +185,7 @@ export function apply(ctx: Context, config: Config = {}): void {
                 description: { type: 'string', required: true },
                 tags: { type: 'array', required: true, items: { type: 'string' } },
                 installCommand: { type: 'string', required: true },
+                installTrust: { type: 'string', required: true },
                 homepage: { type: 'string' },
                 stars: { type: 'number', required: true },
                 starDelta7d: { type: 'number' },

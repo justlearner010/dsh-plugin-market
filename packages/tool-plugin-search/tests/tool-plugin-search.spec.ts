@@ -18,6 +18,7 @@ function recommendation(overrides: Partial<PluginRecommendation> = {}): PluginRe
     description: 'Plugin-based agent harness on Cordis.',
     tags: ['agent', 'harness'],
     installCommand: 'git clone https://github.com/deepseek-ai/deepseek-harness.git',
+    installTrust: 'verified',
     stars: 120,
     stale: false,
     matchedTags: ['agent'],
@@ -73,6 +74,7 @@ describe('formatSearchPluginsOutput', () => {
         description: 'Plugin-based agent harness.',
         tags: ['agent'],
         installCommand: 'git clone https://github.com/deepseek-ai/deepseek-harness.git',
+        installTrust: 'verified',
         stars: 120,
         stale: false,
         matchedTags: ['agent'],
@@ -88,12 +90,50 @@ describe('formatSearchPluginsOutput', () => {
     const text = formatSearchPluginsOutput({
       query: 'agent',
       recommendations: [
-        { name: 'A', repo: 'x/y', description: 'd', tags: ['t'], installCommand: 'c', stars: 1, stale: false, matchedTags: [] },
-        { name: 'B', repo: 'x/z', description: 'd', tags: ['t'], installCommand: 'c', stars: 1, stale: false, matchedTags: [] },
+        { name: 'A', repo: 'x/y', description: 'd', tags: ['t'], installCommand: 'c', installTrust: 'verified', stars: 1, stale: false, matchedTags: [] },
+        { name: 'B', repo: 'x/z', description: 'd', tags: ['t'], installCommand: 'c', installTrust: 'verified', stars: 1, stale: false, matchedTags: [] },
       ],
       totalCatalogSize: 2,
     })
     expect(text).not.toContain('Showing the top')
+  })
+
+  it('notes when an install command is unverified', () => {
+    const text = formatSearchPluginsOutput({
+      query: 'agent',
+      recommendations: [{
+        name: 'DSH Plugin Hub',
+        repo: 'Noob-stupid/dsh-plugin-hub',
+        description: 'Plugin manager.',
+        tags: ['ui'],
+        installCommand: 'dsh plugin add github:Noob-stupid/dsh-plugin-hub',
+        installTrust: 'unverified',
+        stars: 34,
+        stale: false,
+        matchedTags: [],
+      }],
+      totalCatalogSize: 19,
+    })
+    expect(text).toContain('install command not verified')
+  })
+
+  it('marks reference-list entries', () => {
+    const text = formatSearchPluginsOutput({
+      query: 'list',
+      recommendations: [{
+        name: 'Awesome DeepSeek Harness',
+        repo: '0xsline/awesome-deepseek-harness',
+        description: 'Curated list.',
+        tags: ['list'],
+        installCommand: 'git clone https://github.com/0xsline/awesome-deepseek-harness.git',
+        installTrust: 'reference',
+        stars: 669,
+        stale: false,
+        matchedTags: ['list'],
+      }],
+      totalCatalogSize: 19,
+    })
+    expect(text).toContain('reference list/docs')
   })
 
   it('notes stale star counts', () => {
@@ -105,6 +145,7 @@ describe('formatSearchPluginsOutput', () => {
         description: 'Plugin-based agent harness.',
         tags: ['agent'],
         installCommand: 'git clone https://github.com/deepseek-ai/deepseek-harness.git',
+        installTrust: 'verified',
         stars: 120,
         stale: true,
         matchedTags: [],
@@ -154,7 +195,7 @@ describe('search_plugins presentation', () => {
   it('notes when only the top results are shown', () => {
     const text = formatSearchPluginsOutput({
       query: 'agent',
-      recommendations: [{ name: 'DeepSeek Harness', repo: 'deepseek-ai/deepseek-harness', description: 'd', tags: ['agent'], installCommand: 'git clone x', stars: 120, stale: false, matchedTags: ['agent'] }],
+      recommendations: [{ name: 'DeepSeek Harness', repo: 'deepseek-ai/deepseek-harness', description: 'd', tags: ['agent'], installCommand: 'git clone x', installTrust: 'verified', stars: 120, stale: false, matchedTags: ['agent'] }],
       totalCatalogSize: 20,
     })
     expect(text).toContain('Showing the top 1 of 20')
@@ -176,6 +217,7 @@ describe('tool-plugin-search coverage', () => {
         description: 'Plugin-based agent harness.',
         tags: ['agent'],
         installCommand: 'git clone https://github.com/deepseek-ai/deepseek-harness.git',
+        installTrust: 'verified',
         stars: 120,
         starDelta7d: 5,
         starDelta30d: -3,

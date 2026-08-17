@@ -65,8 +65,10 @@ trip (~300–600 ms); GitHub down/rate-limited → stale snapshot instantly.
 ## Curating the catalog
 
 The seed lives in `packages/plugin-market/src/index.ts` (`SEED_ENTRIES`); add a
-repo with its id, name, `owner/name`, description, tags, and install command.
-Trends need a few days of snapshots before 7d/30d deltas appear.
+repo with its id, name, `owner/name`, description, tags, install command, and
+`installTrust` (`verified` declares `dsh.bundle`, `reference` is clone/docs,
+`unverified` is unconfirmed). Trends need a few days of snapshots before 7d/30d
+deltas appear.
 
 ## Status: dependency publication pending
 

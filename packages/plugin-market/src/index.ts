@@ -4,8 +4,8 @@
  * computed from locally persisted snapshots, and relevance ranking against a
  * task-intent query. The directory owns the catalog and its single star data
  * source; the model-facing discovery tool lives in
- * `@deepseek-ai/dsh-tool-plugin-search`.
- * @module @deepseek-ai/dsh-plugin-market
+ * `@justlearner010/dsh-tool-plugin-search`.
+ * @module @justlearner010/dsh-plugin-market
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
@@ -54,6 +54,7 @@ const REPO = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/
 const SEED_ENTRIES: readonly PluginEntry[] = [
   {
     id: 'deepseek-harness',
+    installTrust: 'reference',
     name: 'DeepSeek Harness',
     repo: 'deepseek-ai/deepseek-harness',
     description: 'Plugin-based agent harness on Cordis: every capability — tools, LLM adapters, filesystem, the agent loop — is a plugin.',
@@ -63,6 +64,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'awesome-deepseek-harness',
+    installTrust: 'reference',
     name: 'Awesome DeepSeek Harness',
     repo: '0xsline/awesome-deepseek-harness',
     description: 'Curated DeepSeek Harness ecosystem list: community plugins, tools, and infrastructure.',
@@ -71,16 +73,8 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     homepage: 'https://github.com/0xsline/awesome-deepseek-harness',
   },
   {
-    id: 'deepseek-harness-plugins-list',
-    name: 'DeepSeek Harness Plugins (curated)',
-    repo: 'Dominic789654/awesome-deepseek-harness',
-    description: 'A curated list of plugins, skills, MCP servers, patch/profile layers, orchestrators and UIs for DeepSeek Harness.',
-    tags: ['ecosystem', 'curated', 'plugins', 'mcp', 'list'],
-    installCommand: 'git clone https://github.com/Dominic789654/awesome-deepseek-harness.git',
-    homepage: 'https://github.com/Dominic789654/awesome-deepseek-harness',
-  },
-  {
     id: 'dsh-plugin-hub',
+    installTrust: 'unverified',
     name: 'DSH Plugin Hub',
     repo: 'Noob-stupid/dsh-plugin-hub',
     description: 'DeepSeek Harness plugin management panel: enable/disable plugins and browse a GitHub plugin marketplace with one-click install.',
@@ -90,6 +84,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-plugin-security-review',
+    installTrust: 'unverified',
     name: 'DSH Plugin Security Review',
     repo: 'ShanHaiFish/dsh-plugin-security-review',
     description: 'Dynamic Cordis plugin install security review gate for DeepSeek Harness.',
@@ -99,6 +94,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-workbench-plugin',
+    installTrust: 'unverified',
     name: 'DeepSeek Harness Workbench',
     repo: 'loadingvx/deepseek-harness-workbench-plugin',
     description: 'A workbench plugin for DeepSeek Harness.',
@@ -108,6 +104,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-web-ui',
+    installTrust: 'verified',
     name: 'DSH Web UI',
     repo: 'zhu1090093659/dsh-web-ui',
     description: 'Plugin and skin collection for the DSH web GUI: task board, git graph, live stats, SSH, and more.',
@@ -117,6 +114,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-tianshu-tui',
+    installTrust: 'verified',
     name: 'DSH Tianshu TUI',
     repo: 'huiliyi37/dsh-tianshu-tui',
     description: 'Interactive terminal-style UI plugin for the DSH web client, rendered with a custom ANSI engine.',
@@ -126,6 +124,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-webui-market-plugin',
+    installTrust: 'verified',
     name: 'DSH WebUI Market',
     repo: 'Sanqi-normal/dsh-webui-market-plugin',
     description: 'Community plugin marketplace for the dsh web GUI: browse the awesome-dsh-plugin.com catalog and install to a profile.',
@@ -135,6 +134,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-lark-bot',
+    installTrust: 'verified',
     name: 'DSH Lark Bot',
     repo: 'PlutoKeating/dsh-lark-bot',
     description: 'Bridge DeepSeek Harness into Feishu/Lark: streaming cards, project workspaces, parallel tasks, multi-role.',
@@ -144,6 +144,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-win32',
+    installTrust: 'verified',
     name: 'DSH Win32',
     repo: 'sjh9714/dsh-win32',
     description: 'Get DSH working on Windows with a one-line minimal persistent shell, usable inside the sandbox.',
@@ -153,6 +154,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-movein',
+    installTrust: 'verified',
     name: 'DSH MoveIn',
     repo: 'sjh9714/dsh-movein',
     description: 'Move your whole Claude Code setup into DeepSeek Harness with one command.',
@@ -162,6 +164,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-auth-gate',
+    installTrust: 'verified',
     name: 'DSH Auth Gate',
     repo: 'TecFancy/dsh-auth-gate',
     description: 'Login gate for the DSH web surface: password or shared-token authentication.',
@@ -171,6 +174,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-neotui',
+    installTrust: 'unverified',
     name: 'DSH Neo-TUI',
     repo: 'edabchann/dsh-neotui',
     description: 'Mouse-driven terminal UI client for DeepSeek Harness.',
@@ -180,6 +184,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-config-manager',
+    installTrust: 'verified',
     name: 'DSH Config Manager',
     repo: 'xiajiajun516/dsh-config-manager',
     description: 'Backup, export, import, and migrate DeepSeek Harness configuration.',
@@ -189,6 +194,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-mcp-apps',
+    installTrust: 'unverified',
     name: 'DSH MCP Apps',
     repo: 'sugarforever/dsh-mcp-apps',
     description: 'MCP Apps host plugin for DeepSeek Harness.',
@@ -198,6 +204,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-agfs',
+    installTrust: 'verified',
     name: 'DSH AGFS',
     repo: 'openAGFS/dsh-agfs',
     description: 'Host file-browser web app over the dsh webserver.',
@@ -207,6 +214,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-plugin-om',
+    installTrust: 'verified',
     name: 'DSH Plugin OM',
     repo: 'FanetheDivine/dsh-plugin-om',
     description: 'DSH plugin managing context through Observational Memory.',
@@ -216,6 +224,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'dsh-plugin-focus',
+    installTrust: 'verified',
     name: 'DSH Plugin Focus',
     repo: '863683348/dsh-plugin-focus',
     description: 'Focus board for DeepSeek Harness agents: durable, model-maintained notes.',
@@ -225,6 +234,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
   },
   {
     id: 'orgx-dsh-plugin',
+    installTrust: 'verified',
     name: 'OrgX DeepSeek Harness Plugin',
     repo: 'useorgx/orgx-deepseek-harness-plugin',
     description: 'OrgX Work Ledger, MCP tools, skills, proof, and governed execution for DeepSeek Harness.',
