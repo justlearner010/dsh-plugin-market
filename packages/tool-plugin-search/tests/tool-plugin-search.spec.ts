@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { JsonValue, ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
-import type { PluginRecommendation } from '@your-scope/dsh-plugin-market'
+import type { PluginRecommendation } from '@justlearner010/dsh-plugin-market'
 import {
   apply,
   formatSearchPluginsOutput,
   parseSearchPluginsArgs,
   presentSearchPluginsCall,
   presentSearchPluginsResult,
-} from '@your-scope/dsh-tool-plugin-search'
+} from '@justlearner010/dsh-tool-plugin-search'
 
 function recommendation(overrides: Partial<PluginRecommendation> = {}): PluginRecommendation {
   return {

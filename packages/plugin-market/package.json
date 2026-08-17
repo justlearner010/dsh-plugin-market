@@ -1,5 +1,5 @@
 {
-  "name": "@your-scope/dsh-plugin-market",
+  "name": "@justlearner010/dsh-plugin-market",
   "description": "Recommended-plugin directory (ctx.pluginMarket) for DeepSeek Harness \u2014 curated catalog, live GitHub star metrics, snapshot trends, task-intent ranking, startup prewarm and background refresh",
   "version": "0.1.0",
   "type": "module",

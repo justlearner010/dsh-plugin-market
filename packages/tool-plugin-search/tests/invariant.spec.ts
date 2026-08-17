@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import InvariantRegistry from '@deepseek-ai/dsh-invariants'
-import * as ToolPluginSearchInvariant from '@your-scope/dsh-tool-plugin-search/invariant'
+import * as ToolPluginSearchInvariant from '@justlearner010/dsh-tool-plugin-search/invariant'
 
 describe('tool-plugin-search invariant companion', () => {
   it('registers under the package name with an empty installer', async () => {

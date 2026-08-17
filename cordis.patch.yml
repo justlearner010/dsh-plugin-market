@@ -1,9 +1,9 @@
 # dsh-plugin-market bundle patch. Applied as a profile layer when the bundle is
-# installed with `dsh plugin add @your-scope/dsh-plugin-market-bundle`.
+# installed with `dsh plugin add @justlearner010/dsh-plugin-market-bundle`.
 # The tool row injects `pluginMarket` (this layer's service), `tools`, and
 # `systemPrompt`; Cordis dependency ordering mounts the directory first.
 - insert:
     - id: plugin-market
-      name: '@your-scope/dsh-plugin-market'
+      name: '@justlearner010/dsh-plugin-market'
     - id: tool-plugin-search
-      name: '@your-scope/dsh-tool-plugin-search'
+      name: '@justlearner010/dsh-tool-plugin-search'

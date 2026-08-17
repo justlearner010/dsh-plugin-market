@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import PluginMarket, { type PluginEntry } from '@your-scope/dsh-plugin-market'
+import PluginMarket, { type PluginEntry } from '@justlearner010/dsh-plugin-market'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

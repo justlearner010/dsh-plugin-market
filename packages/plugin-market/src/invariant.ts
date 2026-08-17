@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@your-scope/dsh-plugin-market`.
- * @module @your-scope/dsh-plugin-market/invariant
+ * Package-owned invariant companion for `@justlearner010/dsh-plugin-market`.
+ * @module @justlearner010/dsh-plugin-market/invariant
  */
 
 /* jscpd:ignore-start */
 import type { Context } from '@deepseek-ai/cordis'
 import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
 
-const PACKAGE_NAME = '@your-scope/dsh-plugin-market'
+const PACKAGE_NAME = '@justlearner010/dsh-plugin-market'
 
 /** Cordis companion plugin name. */
 export const name = 'plugin-market-invariant'

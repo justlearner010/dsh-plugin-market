@@ -1,7 +1,7 @@
 {
-  "name": "@your-scope/dsh-plugin-market-bundle",
+  "name": "@justlearner010/dsh-plugin-market-bundle",
   "version": "0.1.0",
-  "description": "DeepSeek Harness bundle: recommended-plugin directory (ctx.pluginMarket) + the search_plugins tool. One command: `dsh plugin add @your-scope/dsh-plugin-market-bundle`.",
+  "description": "DeepSeek Harness bundle: recommended-plugin directory (ctx.pluginMarket) + the search_plugins tool. One command: `dsh plugin add @justlearner010/dsh-plugin-market-bundle`.",
   "private": false,
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@your-scope/dsh-plugin-market": "workspace:*",
-    "@your-scope/dsh-tool-plugin-search": "workspace:*"
+    "@justlearner010/dsh-plugin-market": "workspace:*",
+    "@justlearner010/dsh-tool-plugin-search": "workspace:*"
   }
 }

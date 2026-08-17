@@ -5,27 +5,27 @@ that answers "which DSH plugins should I use?" with live GitHub star data,
 snapshot-derived trends, and task-intent ranking, exposed to the model through
 the `search_plugins` tool.
 
-- `@your-scope/dsh-plugin-market` — the directory service (`ctx.pluginMarket`):
+- `@justlearner010/dsh-plugin-market` — the directory service (`ctx.pluginMarket`):
   curated seed catalog (20+ entries incl. the harness itself and community
   plugins), `register()` for runtime additions, concurrent GitHub star fetch,
   local snapshot persistence, 7/30-day trend computation, and
   `score = 2·(matched tags) + (text match) + log10(stars+1) + 7d-trend` ranking.
   Startup prewarm and a background refresh interval keep the cache warm.
-- `@your-scope/dsh-tool-plugin-search` — the model-facing `search_plugins`
+- `@justlearner010/dsh-tool-plugin-search` — the model-facing `search_plugins`
   tool: schema, query validation, result formatting, result cap, and UI card
   presentation. No network access of its own.
 
 ## Install
 
 ```sh
-dsh plugin add @your-scope/dsh-plugin-market-bundle
+dsh plugin add @justlearner010/dsh-plugin-market-bundle
 ```
 
 Or add the two packages separately:
 
 ```sh
-dsh plugin add @your-scope/dsh-plugin-market
-dsh plugin add @your-scope/dsh-tool-plugin-search
+dsh plugin add @justlearner010/dsh-plugin-market
+dsh plugin add @justlearner010/dsh-tool-plugin-search
 ```
 
 Then ask the agent something like "推荐几个 DeepSeek Harness 插件" — it will
@@ -37,7 +37,7 @@ Mount the service with options (defaults shown):
 
 ```yaml
 - id: plugin-market
-  name: '@your-scope/dsh-plugin-market'
+  name: '@justlearner010/dsh-plugin-market'
   config:
     githubToken: ''          # raises the anonymous 60/hour GitHub limit
     cacheTtlMs: 3600000      # freshness window for cache + persisted snapshots
@@ -82,7 +82,7 @@ shipped. Open an issue here or upstream if a referenced package is still missing
 
 ## Publishing
 
-1. Replace every `@your-scope` with your npm scope (and the bundle/repo name).
+1. Replace every `@justlearner010` with your npm scope (and the bundle/repo name).
 2. `pnpm install && pnpm build && pnpm test`.
 3. `pnpm publish` in each package, then the bundle (bundle last).
 4. After publishing, install from the registry as shown above.

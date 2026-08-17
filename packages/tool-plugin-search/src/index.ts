@@ -2,15 +2,15 @@
  * Model-facing `search_plugins` tool over `ctx.pluginMarket`. This package
  * owns the tool schema, query validation, result formatting, and the result
  * cap; discovery data and ranking come from the directory service.
- * @module @your-scope/dsh-tool-plugin-search
+ * @module @justlearner010/dsh-tool-plugin-search
  */
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, GenericResultView, ToolResult } from '@deepseek-ai/dsh-tools'
-import type { PluginRecommendation } from '@your-scope/dsh-plugin-market'
-import { DEFAULT_MAX_RESULTS } from '@your-scope/dsh-plugin-market'
+import type { PluginRecommendation } from '@justlearner010/dsh-plugin-market'
+import { DEFAULT_MAX_RESULTS } from '@justlearner010/dsh-plugin-market'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 
 /** Cordis plugin name used by loader diagnostics. */
