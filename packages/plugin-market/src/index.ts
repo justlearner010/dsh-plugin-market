@@ -232,6 +232,15 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     installCommand: 'dsh plugin add @useorgx/deepseek-harness-plugin',
     homepage: 'https://github.com/useorgx/orgx-deepseek-harness-plugin',
   },
+  {
+    id: 'dsh-what-changed',
+    name: 'dsh-what-changed',
+    repo: 'sjh9714/dsh-what-changed',
+    description: 'Session-header review of every file the agent wrote this session, with per-file hunks, counting writes the permission layer refused apart from edits, plus a workspace-versus-HEAD section that sees files changed through bash or python.',
+    tags: ['session', 'diff', 'review', 'ui', 'git'],
+    installCommand: 'dsh plugin --profile web add dsh-what-changed',
+    homepage: 'https://github.com/sjh9714/dsh-what-changed',
+  },
 ]
 
 /** Plugin config: star data source and cache/snapshot location. */
