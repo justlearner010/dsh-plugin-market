@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { JsonValue, ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
 import type { PluginRecommendation } from '@justlearner010/dsh-plugin-market'
@@ -17,6 +17,7 @@ function recommendation(overrides: Partial<PluginRecommendation> = {}): PluginRe
     repo: 'deepseek-ai/deepseek-harness',
     description: 'Plugin-based agent harness on Cordis.',
     tags: ['agent', 'harness'],
+    category: 'infra',
     installCommand: 'git clone https://github.com/deepseek-ai/deepseek-harness.git',
     installTrust: 'verified',
     stars: 120,
@@ -279,5 +280,83 @@ describe('tool-plugin-search coverage', () => {
       pluginMarket: {},
     } as unknown as Context
     expect(() => { apply(ctx, { maxResults: 0 }) }).toThrow(/positive integer/)
+  })
+})
+
+describe('search_plugins category filter', () => {
+  function bootWithSpySearch() {
+    const searchSpy = vi.fn(async () => [] as PluginRecommendation[])
+    const registered: ToolDefinition[] = []
+    const ctx = {
+      tools: {
+        register(definition: ToolDefinition) { registered.push(definition); return () => {} },
+      },
+      systemPrompt: { section() {} },
+      pluginMarket: { search: searchSpy, list: () => [] },
+    } as unknown as Context & { pluginMarket: { search: ReturnType<typeof vi.fn>; list: () => PluginRecommendation[] } }
+    apply(ctx, { maxResults: 5 })
+    const tool = registered[0]
+    if (tool === undefined) throw new Error('search_plugins tool was not registered')
+    return { tool, searchSpy }
+  }
+
+  const execCtx = (): ToolRunContext => ({ signal: new AbortController().signal })
+
+  it('passes a single category through to pluginMarket.search', async () => {
+    const { tool, searchSpy } = bootWithSpySearch()
+    await tool.execute({ query: 'web ui', category: 'ui' }, execCtx())
+    expect(searchSpy).toHaveBeenCalledWith('web ui', expect.objectContaining({ category: 'ui' }))
+  })
+
+  it('rejects unknown categories before hitting the directory', async () => {
+    const { tool } = bootWithSpySearch()
+    // The schema's `enum` constraint catches the typo first; the assertion
+    // matches either the schema-layer error message or our defense-in-depth
+    // one, since both communicate the same intent.
+    await expect(tool.execute({ query: 'anything', category: 'unknown' as never }, execCtx()))
+      .rejects.toThrow(/category.*(must be|unknown)/)
+  })
+
+  it('groups multi-category output under per-category headings in PLUGIN_CATEGORIES order', () => {
+    const text = formatSearchPluginsOutput({
+      query: 'anything',
+      recommendations: [
+        recommendation({ id: 'p-ui', category: 'ui' }),
+        recommendation({ id: 'p-mcp', category: 'mcp' }),
+        recommendation({ id: 'p-bridge', category: 'bridge' }),
+        // Intentionally out of declaration order — grouping must follow PLUGIN_CATEGORIES, not input order.
+        recommendation({ id: 'p-ui-2', category: 'ui' }),
+      ] as never,
+      totalCatalogSize: 21,
+    })
+    const uiIdx = text.indexOf('**ui**')
+    const bridgeIdx = text.indexOf('**bridge**')
+    const mcpIdx = text.indexOf('**mcp**')
+    expect(uiIdx).toBeGreaterThan(-1)
+    expect(bridgeIdx).toBeGreaterThan(-1)
+    expect(mcpIdx).toBeGreaterThan(-1)
+    expect(uiIdx).toBeLessThan(bridgeIdx)
+    expect(bridgeIdx).toBeLessThan(mcpIdx)
+  })
+
+  it('keeps a single-category result as a flat list with no section headings', () => {
+    const text = formatSearchPluginsOutput({
+      query: 'mcp',
+      recommendations: [
+        recommendation({ id: 'p1', category: 'mcp' }),
+        recommendation({ id: 'p2', category: 'mcp' }),
+      ] as never,
+      totalCatalogSize: 21,
+    })
+    expect(text).not.toContain('**mcp**')
+  })
+
+  it('marks each row with its category tag in the flat fallback', () => {
+    const text = formatSearchPluginsOutput({
+      query: 'mcp',
+      recommendations: [recommendation({ category: 'mcp' })] as never,
+      totalCatalogSize: 21,
+    })
+    expect(text).toContain('[mcp]')
   })
 })

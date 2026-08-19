@@ -7,6 +7,35 @@
 /** Install-command trust level for a catalog entry. */
 export type PluginInstallTrust = 'verified' | 'reference' | 'unverified'
 
+/**
+ * Closed enum of plugin categories. One entry per `PluginEntry` — used for
+ * faceted filtering, not for ranking. Adding a category is a breaking change
+ * for the public API; renaming an existing one is not (the string value is the
+ * wire format).
+ *
+ * Categories are intentionally coarser than the free-form `tags` field.
+ * Tags are the sub-categorization / keywords; categories are the top-level
+ * bucket a human or model uses to narrow a list.
+ *
+ * The runtime array `PLUGIN_CATEGORIES` (exported from this package's
+ * `index.ts`) carries the matching string list and the canonical display order.
+ */
+export type PluginCategory =
+  /** TUI / Web / workbench / task board. */
+  | 'ui'
+  /** IM bridges (Lark/Feishu, Slack, Discord, ...). */
+  | 'bridge'
+  /** MCP servers / tool adapters. */
+  | 'mcp'
+  /** Generic tool plugins (search, retrieval, ...). */
+  | 'tool'
+  /** Install, security, config, migration, snapshot. */
+  | 'infra'
+  /** Context, observation, focus, notes. */
+  | 'memory'
+  /** Anything the maintainer flags as WIP / niche. */
+  | 'experiment'
+
 /** One recommended-plugin catalog entry registered with `ctx.pluginMarket`. */
 export interface PluginEntry {
   /** Stable catalog id, unique within the directory (kebab-case). */
@@ -19,6 +48,8 @@ export interface PluginEntry {
   readonly description: string
   /** Lowercase task-intent tags used for relevance matching. */
   readonly tags: readonly string[]
+  /** Top-level category, used for faceted filtering and grouped output. */
+  readonly category: PluginCategory
   /** Install command shown to the user (e.g. `dsh plugin add <spec>` or a clone URL). */
   readonly installCommand: string
   /**
@@ -52,6 +83,17 @@ export interface PluginSearchOptions {
   readonly maxResults?: number
   /** Aborts the GitHub fetch and matching work. */
   readonly signal?: AbortSignal
+  /**
+   * Restrict the catalog to entries in this single category before scoring.
+   * When omitted, every category is eligible. An unknown category is
+   * rejected by the schema validator. Categories narrow the pool but never
+   * affect the score formula.
+   *
+   * Multi-category queries are out of scope for the v1 model API: callers
+   * needing a union should issue one search per category and merge results,
+   * or extend the schema with a separate `categories: T[]` field.
+   */
+  readonly category?: PluginCategory
 }
 
 /** One ranked recommendation returned by `ctx.pluginMarket.search()`. */

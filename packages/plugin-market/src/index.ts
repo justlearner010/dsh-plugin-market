@@ -15,6 +15,7 @@ import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type {
+  PluginCategory,
   PluginEntry,
   PluginRecommendation,
   PluginSearchOptions,
@@ -50,6 +51,41 @@ const ENTRY_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 /** GitHub repository grammar: `owner/name`. */
 const REPO = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/
 
+/** Closed set of valid categories, kept here so `validateEntry` and `search` share one source. */
+const CATEGORY_SET: ReadonlySet<PluginCategory> = new Set([
+  'ui', 'bridge', 'mcp', 'tool', 'infra', 'memory', 'experiment',
+])
+
+/**
+ * Stable ordering of categories, exported so callers can iterate deterministically
+ * (e.g. the tool-plugin-search renderer groups output by category in this order).
+ * The string values match `PluginCategory`; the array is asserted as a tuple at the
+ * boundary so the type system catches any drift between the two declarations.
+ */
+export const PLUGIN_CATEGORIES: readonly PluginCategory[] = [
+  'ui', 'bridge', 'mcp', 'tool', 'infra', 'memory', 'experiment',
+] as const
+
+function isPluginCategory(value: unknown): value is PluginCategory {
+  return typeof value === 'string' && CATEGORY_SET.has(value as PluginCategory)
+}
+
+/**
+ * Normalize the `category` search option into a `Set` (for fast `has()` checks)
+ * or `undefined` (meaning "no filter"). Accepts a single category or
+ * `undefined`. Throws on an unknown category so a typo fails fast at the call
+ * site instead of silently returning the whole catalog.
+ */
+function normalizeCategoryFilter(
+  raw: PluginCategory | undefined,
+): Set<PluginCategory> | undefined {
+  if (raw === undefined) return undefined
+  if (!isPluginCategory(raw)) {
+    throw new Error(`plugin-market: unknown category "${raw as string}"`)
+  }
+  return new Set([raw])
+}
+
 /** Built-in seed: the DeepSeek Harness repository plus curated third-party ecosystem entries. */
 const SEED_ENTRIES: readonly PluginEntry[] = [
   {
@@ -59,6 +95,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'deepseek-ai/deepseek-harness',
     description: 'Plugin-based agent harness on Cordis: every capability — tools, LLM adapters, filesystem, the agent loop — is a plugin.',
     tags: ['agent', 'harness', 'plugin', 'llm', 'tools', 'cli', 'cordis'],
+    category: 'infra',
     installCommand: 'git clone https://github.com/deepseek-ai/deepseek-harness.git',
     homepage: 'https://github.com/deepseek-ai/deepseek-harness',
   },
@@ -69,6 +106,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: '0xsline/awesome-deepseek-harness',
     description: 'Curated DeepSeek Harness ecosystem list: community plugins, tools, and infrastructure.',
     tags: ['ecosystem', 'curated', 'plugins', 'skills', 'mcp', 'list'],
+    category: 'experiment',
     installCommand: 'git clone https://github.com/0xsline/awesome-deepseek-harness.git',
     homepage: 'https://github.com/0xsline/awesome-deepseek-harness',
   },
@@ -79,6 +117,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'Noob-stupid/dsh-plugin-hub',
     description: 'DeepSeek Harness plugin management panel: enable/disable plugins and browse a GitHub plugin marketplace with one-click install.',
     tags: ['plugin-manager', 'marketplace', 'ui', 'install'],
+    category: 'ui',
     installCommand: 'dsh plugin add github:Noob-stupid/dsh-plugin-hub',
     homepage: 'https://github.com/Noob-stupid/dsh-plugin-hub',
   },
@@ -89,6 +128,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'ShanHaiFish/dsh-plugin-security-review',
     description: 'Dynamic Cordis plugin install security review gate for DeepSeek Harness.',
     tags: ['security', 'guard', 'review', 'install'],
+    category: 'infra',
     installCommand: 'dsh plugin add github:ShanHaiFish/dsh-plugin-security-review',
     homepage: 'https://github.com/ShanHaiFish/dsh-plugin-security-review',
   },
@@ -99,6 +139,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'loadingvx/deepseek-harness-workbench-plugin',
     description: 'A workbench plugin for DeepSeek Harness.',
     tags: ['workbench', 'productivity', 'ui'],
+    category: 'ui',
     installCommand: 'dsh plugin add github:loadingvx/deepseek-harness-workbench-plugin',
     homepage: 'https://github.com/loadingvx/deepseek-harness-workbench-plugin',
   },
@@ -109,6 +150,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'zhu1090093659/dsh-web-ui',
     description: 'Plugin and skin collection for the DSH web GUI: task board, git graph, live stats, SSH, and more.',
     tags: ['web', 'ui', 'plugin', 'task-board', 'git', 'collection'],
+    category: 'ui',
     installCommand: 'dsh plugin add @linxin666/dsh-web-ui-all',
     homepage: 'https://github.com/zhu1090093659/dsh-web-ui',
   },
@@ -119,6 +161,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'huiliyi37/dsh-tianshu-tui',
     description: 'Interactive terminal-style UI plugin for the DSH web client, rendered with a custom ANSI engine.',
     tags: ['tui', 'ui', 'terminal', 'web'],
+    category: 'ui',
     installCommand: 'dsh plugin add @huiliyi37/dsh-tianshu-tui',
     homepage: 'https://github.com/huiliyi37/dsh-tianshu-tui',
   },
@@ -129,6 +172,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'Sanqi-normal/dsh-webui-market-plugin',
     description: 'Community plugin marketplace for the dsh web GUI: browse the awesome-dsh-plugin.com catalog and install to a profile.',
     tags: ['marketplace', 'web', 'ui', 'install'],
+    category: 'ui',
     installCommand: 'dsh plugin add @sanqi-normal/dsh-webui-market-plugin',
     homepage: 'https://github.com/Sanqi-normal/dsh-webui-market-plugin',
   },
@@ -139,6 +183,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'PlutoKeating/dsh-lark-bot',
     description: 'Bridge DeepSeek Harness into Feishu/Lark: streaming cards, project workspaces, parallel tasks, multi-role.',
     tags: ['feishu', 'lark', 'bot', 'chat', 'bridge'],
+    category: 'bridge',
     installCommand: 'dsh plugin add dsh-lark-bot',
     homepage: 'https://github.com/PlutoKeating/dsh-lark-bot',
   },
@@ -149,6 +194,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'sjh9714/dsh-win32',
     description: 'Get DSH working on Windows with a one-line minimal persistent shell, usable inside the sandbox.',
     tags: ['windows', 'shell', 'setup'],
+    category: 'infra',
     installCommand: 'dsh plugin add dsh-win32',
     homepage: 'https://github.com/sjh9714/dsh-win32',
   },
@@ -159,6 +205,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'sjh9714/dsh-movein',
     description: 'Move your whole Claude Code setup into DeepSeek Harness with one command.',
     tags: ['migration', 'claude-code', 'setup'],
+    category: 'infra',
     installCommand: 'dsh plugin add dsh-movein',
     homepage: 'https://github.com/sjh9714/dsh-movein',
   },
@@ -169,6 +216,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'TecFancy/dsh-auth-gate',
     description: 'Login gate for the DSH web surface: password or shared-token authentication.',
     tags: ['auth', 'security', 'web'],
+    category: 'infra',
     installCommand: 'dsh plugin add dsh-auth-gate',
     homepage: 'https://github.com/TecFancy/dsh-auth-gate',
   },
@@ -179,6 +227,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'edabchann/dsh-neotui',
     description: 'Mouse-driven terminal UI client for DeepSeek Harness.',
     tags: ['tui', 'terminal', 'client'],
+    category: 'ui',
     installCommand: 'dsh plugin add dsh-neotui',
     homepage: 'https://github.com/edabchann/dsh-neotui',
   },
@@ -189,6 +238,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'xiajiajun516/dsh-config-manager',
     description: 'Backup, export, import, and migrate DeepSeek Harness configuration.',
     tags: ['config', 'backup', 'migrate'],
+    category: 'infra',
     installCommand: 'dsh plugin add dsh-config-manager',
     homepage: 'https://github.com/xiajiajun516/dsh-config-manager',
   },
@@ -199,6 +249,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'sugarforever/dsh-mcp-apps',
     description: 'MCP Apps host plugin for DeepSeek Harness.',
     tags: ['mcp', 'apps', 'tools'],
+    category: 'mcp',
     installCommand: 'dsh plugin add @sugarforever/dsh-mcp-apps',
     homepage: 'https://github.com/sugarforever/dsh-mcp-apps',
   },
@@ -209,6 +260,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'openAGFS/dsh-agfs',
     description: 'Host file-browser web app over the dsh webserver.',
     tags: ['files', 'browser', 'web'],
+    category: 'ui',
     installCommand: 'dsh plugin add @open-agfs/dsh-agfs',
     homepage: 'https://github.com/openAGFS/dsh-agfs',
   },
@@ -219,6 +271,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'FanetheDivine/dsh-plugin-om',
     description: 'DSH plugin managing context through Observational Memory.',
     tags: ['memory', 'context', 'observation'],
+    category: 'memory',
     installCommand: 'dsh plugin add dsh-plugin-om',
     homepage: 'https://github.com/FanetheDivine/dsh-plugin-om',
   },
@@ -229,6 +282,7 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: '863683348/dsh-plugin-focus',
     description: 'Focus board for DeepSeek Harness agents: durable, model-maintained notes.',
     tags: ['focus', 'notes', 'productivity'],
+    category: 'memory',
     installCommand: 'dsh plugin add dsh-plugin-focus',
     homepage: 'https://github.com/863683348/dsh-plugin-focus',
   },
@@ -239,15 +293,18 @@ const SEED_ENTRIES: readonly PluginEntry[] = [
     repo: 'useorgx/orgx-deepseek-harness-plugin',
     description: 'OrgX Work Ledger, MCP tools, skills, proof, and governed execution for DeepSeek Harness.',
     tags: ['orgx', 'mcp', 'ledger', 'tools'],
+    category: 'mcp',
     installCommand: 'dsh plugin add @useorgx/deepseek-harness-plugin',
     homepage: 'https://github.com/useorgx/orgx-deepseek-harness-plugin',
   },
   {
     id: 'dsh-what-changed',
+    installTrust: 'unverified',
     name: 'dsh-what-changed',
     repo: 'sjh9714/dsh-what-changed',
     description: 'Session-header review of every file the agent wrote this session, with per-file hunks, counting writes the permission layer refused apart from edits, plus a workspace-versus-HEAD section that sees files changed through bash or python.',
     tags: ['session', 'diff', 'review', 'ui', 'git'],
+    category: 'ui',
     installCommand: 'dsh plugin --profile web add dsh-what-changed',
     homepage: 'https://github.com/sjh9714/dsh-what-changed',
   },
@@ -376,15 +433,22 @@ export class PluginMarket extends Service {
    * metrics are resolved (live fetch, then snapshot cache, then `stale`),
    * scored by tag/description relevance plus star popularity and 7-day trend,
    * and returned in descending score order capped at `maxResults`.
+   *
+   * When `options.category` is provided, the catalog is filtered to entries
+   * whose `category` is in the allowed set *before* scoring — categories
+   * narrow the pool but never affect the score formula.
    * @param query - task-intent text; empty text ranks by popularity and trend alone.
-   * @param options - result cap and abort signal.
+   * @param options - result cap, category filter, and abort signal.
    * @returns ranked recommendations.
    */
   async search(query: string, options: PluginSearchOptions = {}): Promise<PluginRecommendation[]> {
     throwIfAborted(options.signal)
     const maxResults = options.maxResults ?? DEFAULT_MAX_RESULTS
     assertPositiveInteger('maxResults', maxResults)
-    const entries = this.list()
+    const categoryFilter = normalizeCategoryFilter(options.category)
+    const entries = categoryFilter === undefined
+      ? this.list()
+      : this.list().filter(entry => categoryFilter.has(entry.category))
     const metricsByRepo = await this.resolveMetrics(entries.map(entry => entry.repo), options.signal)
     const recommendations = entries.map((entry) => {
       const match = matchQuery(entry, query)
@@ -608,6 +672,9 @@ function validateEntry(entry: PluginEntry, subject: string): void {
   if (entry.description.length === 0) throw new Error(`plugin-market: ${subject} "${entry.id}" requires a description`)
   if (entry.tags.length === 0) throw new Error(`plugin-market: ${subject} "${entry.id}" requires at least one tag`)
   if (entry.tags.some(tag => tag.length === 0)) throw new Error(`plugin-market: ${subject} "${entry.id}" has an empty tag`)
+  if (!isPluginCategory(entry.category)) {
+    throw new Error(`plugin-market: ${subject} "${entry.id}" has unknown category "${entry.category}"`)
+  }
   if (entry.installCommand.length === 0) throw new Error(`plugin-market: ${subject} "${entry.id}" requires an installCommand`)
 }
 

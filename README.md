@@ -7,13 +7,24 @@ the `search_plugins` tool.
 
 - `@justlearner010/dsh-plugin-market` — the directory service (`ctx.pluginMarket`):
   curated seed catalog (20+ entries incl. the harness itself and community
-  plugins), `register()` for runtime additions, concurrent GitHub star fetch,
-  local snapshot persistence, 7/30-day trend computation, and
+  plugins, each tagged with a closed set of `category` facets),
+  `register()` for runtime additions, concurrent GitHub star fetch, local
+  snapshot persistence, 7/30-day trend computation, and
   `score = 2·(matched tags) + (text match) + log10(stars+1) + 7d-trend` ranking.
   Startup prewarm and a background refresh interval keep the cache warm.
 - `@justlearner010/dsh-tool-plugin-search` — the model-facing `search_plugins`
-  tool: schema, query validation, result formatting, result cap, and UI card
-  presentation. No network access of its own.
+  tool: schema, query validation, result formatting (grouped by category when
+  more than one is present), result cap, and UI card presentation. No network
+  access of its own.
+
+## Categories
+
+Every `PluginEntry` carries exactly one `category` from a closed enum:
+`ui`, `bridge`, `mcp`, `tool`, `infra`, `memory`, `experiment`. The tool
+accepts an optional `category` parameter; results are grouped under per-
+category headings (in the canonical enum order) when the response spans
+more than one, and as a flat list with inline `[category]` markers otherwise.
+Categories narrow the result pool but never affect the score formula.
 
 ## Install
 
@@ -65,10 +76,11 @@ trip (~300–600 ms); GitHub down/rate-limited → stale snapshot instantly.
 ## Curating the catalog
 
 The seed lives in `packages/plugin-market/src/index.ts` (`SEED_ENTRIES`); add a
-repo with its id, name, `owner/name`, description, tags, install command, and
-`installTrust` (`verified` declares `dsh.bundle`, `reference` is clone/docs,
-`unverified` is unconfirmed). Trends need a few days of snapshots before 7d/30d
-deltas appear.
+repo with its id, name, `owner/name`, description, tags, `category` (one of
+`ui` / `bridge` / `mcp` / `tool` / `infra` / `memory` / `experiment`),
+install command, and `installTrust` (`verified` declares `dsh.bundle`,
+`reference` is clone/docs, `unverified` is unconfirmed). Trends need a few
+days of snapshots before 7d/30d deltas appear.
 
 ## Status: dependency publication pending
 

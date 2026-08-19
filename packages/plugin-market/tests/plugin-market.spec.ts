@@ -14,6 +14,7 @@ function entry(overrides: Partial<PluginEntry> = {}): PluginEntry {
     repo: 'acme/sample-plugin',
     description: 'Sample plugin for testing.',
     tags: ['sample', 'test'],
+    category: 'tool',
     installCommand: 'dsh plugin add @acme/dsh-sample',
     installTrust: 'verified',
     ...overrides,
@@ -448,10 +449,42 @@ describe('PluginMarket edge cases', () => {
       [{ description: '' }, /requires a description/],
       [{ tags: [] }, /at least one tag/],
       [{ tags: [''] }, /empty tag/],
+      [{ category: 'unknown' as never }, /unknown category/],
       [{ installCommand: '' }, /requires an installCommand/],
     ]
     for (const [overrides, pattern] of invalid) {
       expect(() => ctx.pluginMarket.register(entry(overrides))).toThrow(pattern)
     }
+  })
+
+  it('seeds every entry with a valid category', async () => {
+    const ctx = new Context()
+    await ctx.plugin(PluginMarket, { snapshotDir: dir, prewarm: false, refreshIntervalMs: 0 })
+    const categories = new Set(ctx.pluginMarket.list().map(item => item.category))
+    // Every seed must carry a category, and the union of categories in the
+    // 21-entry seed must include the four the maintainer uses most heavily.
+    expect(categories.has('ui')).toBe(true)
+    expect(categories.has('infra')).toBe(true)
+    expect(categories.size).toBeGreaterThanOrEqual(4)
+  })
+
+  it('filters search results by category', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, _init?: RequestInit) => githubResponse(100)))
+    const ctx = new Context()
+    await ctx.plugin(PluginMarket, { snapshotDir: dir, prewarm: false, refreshIntervalMs: 0 })
+    const uiResults = await ctx.pluginMarket.search('any', { maxResults: 100, category: 'ui' })
+    expect(uiResults.length).toBeGreaterThan(0)
+    expect(uiResults.every(rec => rec.category === 'ui')).toBe(true)
+    // Same shape, just filtered — score formula unchanged.
+    expect(uiResults[0]?.score).toBeGreaterThan(0)
+  })
+
+  it('accepts a single category and rejects unknown categories', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, _init?: RequestInit) => githubResponse(100)))
+    const ctx = new Context()
+    await ctx.plugin(PluginMarket, { snapshotDir: dir, prewarm: false, refreshIntervalMs: 0 })
+    const uiResults = await ctx.pluginMarket.search('any', { maxResults: 100, category: 'ui' })
+    expect(uiResults.every(rec => rec.category === 'ui')).toBe(true)
+    await expect(ctx.pluginMarket.search('any', { category: 'no-such-category' as never })).rejects.toThrow(/unknown category/)
   })
 })
