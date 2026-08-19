@@ -1,8 +1,11 @@
 /**
  * Pure catalog, star-metric, and recommendation types for the plugin-market
  * capability. Runtime code lives in index.ts.
- * @module @deepseek-ai/dsh-plugin-market/types
+ * @module @justlearner010/dsh-plugin-market/types
  */
+
+/** Install-command trust level for a catalog entry. */
+export type PluginInstallTrust = 'verified' | 'reference' | 'unverified'
 
 /** One recommended-plugin catalog entry registered with `ctx.pluginMarket`. */
 export interface PluginEntry {
@@ -18,6 +21,13 @@ export interface PluginEntry {
   readonly tags: readonly string[]
   /** Install command shown to the user (e.g. `dsh plugin add <spec>` or a clone URL). */
   readonly installCommand: string
+  /**
+   * Trust level of the install command: `verified` declares `dsh.bundle` (a
+   * profile-layer bundle `dsh plugin add` installs), `reference` is a clone or
+   * docs URL (not an installable bundle), `unverified` claims installability
+   * without confirmed bundle support.
+   */
+  readonly installTrust: PluginInstallTrust
   /** Optional homepage or documentation URL. */
   readonly homepage?: string
 }
