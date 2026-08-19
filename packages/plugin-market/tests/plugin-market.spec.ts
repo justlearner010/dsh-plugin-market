@@ -341,10 +341,12 @@ describe('PluginMarket edge cases', () => {
     await ctx.plugin(PluginMarket, { snapshotDir: dir, prewarm: false, refreshIntervalMs: 0 })
     ctx.pluginMarket.register(entry({ id: 'zeta-plugin', name: 'Zeta Plugin', repo: 'acme/zeta-plugin', tags: ['q'] }))
     ctx.pluginMarket.register(entry({ id: 'alpha-plugin', name: 'Alpha Plugin', repo: 'acme/alpha-plugin', tags: ['r'] }))
-    const results = await ctx.pluginMarket.search('zzz-no-match', { maxResults: 30 })
-    // Equal scores sort by name; the registered Alpha/Zeta entries bound the seed range.
+    ctx.pluginMarket.register(entry({ id: 'zzz-tail-plugin', name: 'zzz tail plugin', repo: 'acme/zzz-tail-plugin', tags: ['s'] }))
+    const results = await ctx.pluginMarket.search('zzz-no-match', { maxResults: 100 })
+    // Equal scores sort by name; the registered Alpha entry is the smallest name and
+    // the registered zzz-tail entry is the largest, bounding the seed range.
     expect(results[0]?.id).toBe('alpha-plugin')
-    expect(results.at(-1)?.id).toBe('zeta-plugin')
+    expect(results.at(-1)?.id).toBe('zzz-tail-plugin')
   })
 
   it('defaults the cache TTL when constructed directly without config', () => {

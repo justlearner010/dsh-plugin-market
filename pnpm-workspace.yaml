@@ -1,2 +1,9 @@
 packages:
   - packages/*
+
+# pnpm v11 replaced `pnpm.onlyBuiltDependencies` with this allowlist.
+# vitest depends on esbuild's native binary; without it the test runner
+# cannot transform TypeScript files. Everything else stays blocked —
+# default is empty + strictDepBuilds=true in pnpm 11.
+allowBuilds:
+  esbuild: true
