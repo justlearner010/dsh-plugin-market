@@ -13,5 +13,10 @@
   "dependencies": {
     "@justlearner010/dsh-plugin-market": "workspace:*",
     "@justlearner010/dsh-tool-plugin-search": "workspace:*"
+  },
+  "scripts": {
+    "build": "pnpm -r --workspace-concurrency=2 run build",
+    "test": "pnpm -r --workspace-concurrency=2 run test",
+    "typecheck": "pnpm -r --workspace-concurrency=2 run typecheck"
   }
 }
