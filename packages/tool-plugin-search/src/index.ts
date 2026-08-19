@@ -9,8 +9,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, GenericResultView, ToolResult } from '@deepseek-ai/dsh-tools'
-import type { PluginRecommendation } from '@justlearner010/dsh-plugin-market'
-import { DEFAULT_MAX_RESULTS } from '@justlearner010/dsh-plugin-market'
+import {
+  DEFAULT_MAX_RESULTS,
+  PLUGIN_CATEGORIES,
+  type PluginCategory,
+  type PluginRecommendation,
+} from '@justlearner010/dsh-plugin-market'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 
 /** Cordis plugin name used by loader diagnostics. */
@@ -36,6 +40,7 @@ interface RecommendationProjection {
   readonly repo: string
   readonly description: string
   readonly tags: string[]
+  readonly category: PluginCategory
   readonly installCommand: string
   readonly installTrust: string
   readonly homepage?: string
@@ -54,20 +59,32 @@ interface SearchPluginsOutput {
 }
 
 /**
- * Validate constraints the schema DSL cannot express: a non-blank `query`.
+ * Validate constraints the schema DSL cannot express: a non-blank `query`,
+ * an optional `category` restricted to the closed set of categories the
+ * directory knows about. The schema layer already enforces this via the
+ * `enum` constraint on the parameter; this is a defense-in-depth pass that
+ * also works when the function is called outside the tool dispatcher.
  * @param args - the schema-validated `search_plugins` arguments.
  * @returns the accepted arguments, passed through unchanged.
  */
-export function parseSearchPluginsArgs(args: { query: string }): { query: string } {
+export function parseSearchPluginsArgs(args: {
+  query: string
+  category?: PluginCategory
+}): { query: string; category?: PluginCategory } {
   if (args.query.trim().length === 0) throw new Error('query must be a non-empty string')
-  return { query: args.query }
+  if (args.category === undefined) return args
+  if (!PLUGIN_CATEGORIES.includes(args.category)) {
+    throw new Error(`unknown category "${args.category}"; expected one of ${PLUGIN_CATEGORIES.join(', ')}`)
+  }
+  return args
 }
 
 /**
  * Format a `search_plugins` output value as one model-facing text block: a
- * ranked markdown recommendation list, a short-catalog note when the directory
- * holds one entry or fewer, and a staleness note when any star count is cached
- * or unavailable.
+ * ranked markdown recommendation list (grouped by category when more than one
+ * category is represented), a short-catalog note when the directory holds one
+ * entry or fewer, and a staleness note when any star count is cached or
+ * unavailable.
  * @param output - the canonical output value.
  * @returns the model-facing markdown.
  */
@@ -76,7 +93,7 @@ export function formatSearchPluginsOutput(output: SearchPluginsOutput): string {
   if (output.recommendations.length === 0) {
     parts.push('No recommended plugins matched the query.')
   } else {
-    parts.push(`Recommended plugins for "${output.query}":\n${output.recommendations.map(formatRecommendation).join('\n')}`)
+    parts.push(`Recommended plugins for "${output.query}":\n${formatRecommendationsGrouped(output.recommendations)}`)
   }
   if (output.totalCatalogSize <= 1) {
     parts.push(`Note: the plugin catalog currently contains ${output.totalCatalogSize} entry — the DSH plugin ecosystem is in its early days, so this list is short by design.`)
@@ -91,12 +108,35 @@ export function formatSearchPluginsOutput(output: SearchPluginsOutput): string {
   return parts.join('\n\n')
 }
 
+/**
+ * Group a flat recommendation list by category, in the stable order declared by
+ * `PLUGIN_CATEGORIES`. Single-category results collapse back to the flat list
+ * so callers that filtered with `category: 'mcp'` get a one-section output,
+ * not a `## mcp` heading on top of a single block.
+ */
+function formatRecommendationsGrouped(recommendations: readonly RecommendationProjection[]): string {
+  const seenCategories = new Set<PluginCategory>()
+  for (const rec of recommendations) seenCategories.add(rec.category)
+  const ordered = PLUGIN_CATEGORIES.filter(category => seenCategories.has(category))
+  if (ordered.length <= 1) {
+    return recommendations.map(formatRecommendation).join('\n')
+  }
+  const sections: string[] = []
+  for (const category of ordered) {
+    const rows = recommendations.filter(rec => rec.category === category)
+    if (rows.length === 0) continue
+    sections.push(`**${category}** (${rows.length})\n${rows.map(formatRecommendation).join('\n')}`)
+  }
+  return sections.join('\n\n')
+}
+
 function projectRecommendation(recommendation: PluginRecommendation): RecommendationProjection {
   return {
     name: recommendation.name,
     repo: recommendation.repo,
     description: recommendation.description,
     tags: [...recommendation.tags],
+    category: recommendation.category,
     installCommand: recommendation.installCommand,
     installTrust: recommendation.installTrust,
     ...recommendation.homepage !== undefined ? { homepage: recommendation.homepage } : {},
@@ -116,7 +156,8 @@ function formatRecommendation(rec: RecommendationProjection): string {
   const stale = rec.stale ? ', stale' : ''
   const matched = rec.matchedTags.length > 0 ? ` (matches: ${rec.matchedTags.join(', ')})` : ''
   const trust = rec.installTrust === 'unverified' ? ' (install command not verified)' : rec.installTrust === 'reference' ? ' (reference list/docs)' : ''
-  return `- **${rec.name}** — \`${rec.repo}\` — ${rec.stars}\u2605${trend}${stale}${matched}\n  ${rec.description}\n  install: \`${rec.installCommand}\`${trust}`
+  const category = ` [${rec.category}]`
+  return `- **${rec.name}**${category} — \`${rec.repo}\` — ${rec.stars}\u2605${trend}${stale}${matched}\n  ${rec.description}\n  install: \`${rec.installCommand}\`${trust}`
 }
 
 function signed(value: number): string {
@@ -158,7 +199,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   ctx.systemPrompt.section({
     name: 'tool:search_plugins',
     order: 120,
-    text: 'Use the search_plugins tool when the user asks for recommended DeepSeek Harness plugins or extensions. It returns plugins ranked by GitHub stars, star trend, and task relevance, each with an install command. Present the top matches with their install command and repository URL as a markdown link, and note when the catalog is small or star counts are stale.',
+    text: 'Use the search_plugins tool when the user asks for recommended DeepSeek Harness plugins or extensions. It returns plugins ranked by GitHub stars, star trend, and task relevance, each with an install command. Present the top matches with their install command and repository URL as a markdown link, and note when the catalog is small or star counts are stale. Optional `category` (one of ui/bridge/mcp/tool/infra/memory/experiment) narrows the result set.',
   })
 
   ctx.tools.register(defineTool({
@@ -166,6 +207,11 @@ export function apply(ctx: Context, config: Config = {}): void {
     description: 'Search recommended DeepSeek Harness plugins. Returns plugins ranked by GitHub stars, star trend, and relevance to a task, each with an install command.',
     parameters: {
       query: { type: 'string', required: true, description: 'A task description or keywords to match plugins against.' },
+      category: {
+        type: 'string',
+        enum: [...PLUGIN_CATEGORIES],
+        description: 'Optional facet: restrict the result set to plugins in this category. Closed enum: ui, bridge, mcp, tool, infra, memory, experiment.',
+      },
     },
     output: {
       schema: {
@@ -184,6 +230,7 @@ export function apply(ctx: Context, config: Config = {}): void {
                 repo: { type: 'string', required: true },
                 description: { type: 'string', required: true },
                 tags: { type: 'array', required: true, items: { type: 'string' } },
+                category: { type: 'string', enum: [...PLUGIN_CATEGORIES], required: true },
                 installCommand: { type: 'string', required: true },
                 installTrust: { type: 'string', required: true },
                 homepage: { type: 'string' },
@@ -205,7 +252,11 @@ export function apply(ctx: Context, config: Config = {}): void {
     presentResult: presentSearchPluginsResult,
     async execute(args, exec) {
       const input = parseSearchPluginsArgs(args)
-      const recommendations = await ctx.pluginMarket.search(input.query, { maxResults, signal: exec.signal })
+      const recommendations = await ctx.pluginMarket.search(input.query, {
+        maxResults,
+        signal: exec.signal,
+        ...input.category !== undefined ? { category: input.category } : {},
+      })
       return {
         query: input.query,
         recommendations: recommendations.map(projectRecommendation),
